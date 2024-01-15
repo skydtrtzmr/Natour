@@ -31,7 +31,23 @@ const Tour = require('./../models/tourModel');
 exports.getAllTours = async (req, res) =>{
     // console.log(req.requestTime);
     try{
-        const tours = await Tour.find() // return all the documents
+        console.log(req.query);
+
+        // 两种检索方式：
+
+        // const tours = await Tour.find({
+        //     duraion: 5,
+        //     difficulty: 'easy'
+        // });
+
+        // const tours = await Tour.find() // return all the documents
+        //     .where('duration')
+        //     .equals(5)
+        //     .where('difficulty')
+        //     .equals('easy');
+
+        const tours = await Tour.find(req.query);
+
         res
         .status(200)
         .json({
