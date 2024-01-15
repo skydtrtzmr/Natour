@@ -5,12 +5,12 @@ const tourRouter = express.Router();
 // app.get('/api/v1/tours', getAllTours);
 // app.post('/api/v1/tours', createTour);
 
-tourRouter.param('id', tourController.checkID);
+// tourRouter.param('id', tourController.checkID);
 
 tourRouter
     .route('/')
     .get(tourController.getAllTours)
-    .post(tourController.checkBody, tourController.createTour);
+    .post(tourController.createTour);
 
 // :id 是一个路由参数（Route Parameter）的占位符。
 // 它表示在这个路径的位置可以匹配任何值，并且这个值将作为参数传递给路由处理函数。

@@ -10,33 +10,20 @@ mongoose.connect(DB).then(() => {
     console.log('DB connection successful!');
 });
 
-const tourSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'A tour must have a name'],
-        unique: true
-    },
-    rating: {
-        type: Number,
-        default: 4.5,
-    },
-    price: {
-        type: Number,
-        required: [true, 'A tour must have a name']
-    },
-});
-
-const Tour = mongoose.model('Tour', tourSchema);
 
 // testTour 是一个document instance
-const testTour = new Tour({
-    name: 'The Forest Hiker',
-    rating: 4.7,
-    price: 497
-});
+// const testTour = new Tour({
+//     name: 'The Forest Hiker',
+//     rating: 4.7,
+//     price: 497
+// });
 
 // save会返回一个可以consume的promise
-testTour.save()
+// testTour.save().then(doc => {
+//     console.log(doc);
+// }).catch(err => {
+//     console.log('Err💥:', err)
+// })
 
 // console.log(app.get('env'));
 // console.log(process.env);
