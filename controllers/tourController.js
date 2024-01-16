@@ -29,9 +29,18 @@ const Tour = require('./../models/tourModel');
 // }
 
 exports.getAllTours = async (req, res) =>{
+
     // console.log(req.requestTime);
     try{
-        console.log(req.query);
+        // 1. BUILD QUERY
+
+        // 1.1 Filtering
+        const queryObj = { ...req.query };
+
+        // 出现在这里的检索字段，都会被无视掉。
+        const excludeFields = ['page', 'sort', 'limit', 'fields'];
+        excludeFields.forEach(el => delete queryObj[el]);
+        console.log(req.query, queryObj);
 
         // 两种检索方式：
 
@@ -46,8 +55,22 @@ exports.getAllTours = async (req, res) =>{
         //     .where('difficulty')
         //     .equals('easy');
 
-        const tours = await Tour.find(req.query);
+        // 1.2 Advanced filtering
+        let queryStr = JSON.stringify(queryObj);
+        queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+        console.log(JSON.parse(queryStr));
 
+        // MongoDB里的形式：{ difficulty: 'easy', duration: { $gte:5 } }
+        // NodeJS的形式：{ difficulty: 'easy', duration: { gte:'5' } }
+        // gte, gt, lte, lt
+
+        const query = Tour.find(JSON.parse(queryStr));
+
+        // 2. EXECUTE QUERY
+        const tours = await query;
+        // `find`返回一个query对象
+
+        // 3. SEND RESPONSE
         res
         .status(200)
         .json({
