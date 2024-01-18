@@ -47,7 +47,8 @@ const tourSchema = new mongoose.Schema({
     image: [String],
     createdAt: {
         type: Date,
-        default: Date.now()
+        default: Date.now(),
+        select: false // 将该字段向客户端隐藏
     },
     // 表该旅程每次旅行的开始时间
     startDates: [Date] // MongoDB会自动尝试解析日期格式的数据。
