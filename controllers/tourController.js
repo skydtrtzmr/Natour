@@ -329,8 +329,28 @@ exports.getMonthlyPlan = async (req, res) => {
                     // `_id`: 用来设置按照什么字段分组显示；如果为null则不分组。
                     _id: { $month: "$startDates" }, 
                     numTourStarts: { $sum: 1 }, // 给每个文档的值为1，sum起来就成了总数。
+                    tours: { $push: '$name' }
                 }
             },
+            {
+                $addFields: {
+                    month: '$_id'
+                }
+            },
+            {
+                $project:{
+                    _id: 0
+                }
+            },
+            {
+                $sort: {
+                    numTourStarts: -1, // `-1`表示降序
+                    // month: -1
+                }
+            },
+            {
+                $limit: 1
+            }
             // {
             //     $sort: { avgPrice: 1 }
             //     // `$sort1`里面，1 表示升序，-1 表示降序。
