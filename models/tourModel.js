@@ -82,15 +82,17 @@ tourSchema.pre('save', function(next){
     next();
 })
 
-tourSchema.pre('save', function(next){
-    console.log("Will save document...");
-    next();
-})
+// tourSchema.pre('save', function(next){
+//     console.log("Will save document...");
+//     next();
+// })
 
-tourSchema.post('save', function(doc, next){
-    console.log(doc);
-    next();
-})
+// tourSchema.post('save', function(doc, next){
+//     console.log(doc);
+//     next();
+// })
+// 在 Mongoose 中，文档中间件的回调函数的第一个参数通常表示当前的文档。
+// 在这里，function(doc, next) 中的 doc 参数表示已经保存到数据库的当前文档。
 
 const Tour = mongoose.model('Tour', tourSchema);
 
