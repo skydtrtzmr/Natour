@@ -45,3 +45,9 @@ if(process.argv[2] === '--import') {
 }
 
 console.log(process.argv);
+
+
+// 如何运行这个脚本？
+// 命令行：
+// `node dev-data/data/import-dev-data.js --delete`
+// `node dev-data/data/import-dev-data.js --import`
