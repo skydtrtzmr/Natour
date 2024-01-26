@@ -319,22 +319,18 @@ exports.getMonthlyPlan = async (req, res) => {
             {
                 $match: {
                     startDates: {
-                        $gte: 4.5
+                        $gte: new Date(`${year}-01-01`),
+                        $lte: new Date(`${year}-12-31`)
                     } 
                 }
             },
-            // {
-            //     $group: {
-            //         // `_id`: 用来设置按照什么字段分组显示；如果为null则不分组。
-            //         _id: { $toUpper: "$difficulty" }, 
-            //         numTours: { $sum: 1 }, // 给每个文档的值为1，sum起来就成了总数。
-            //         numRatings: { $sum: '$ratingsQuantity' },
-            //         avgRating: { $avg: '$ratingsAverage' },
-            //         avgPrice: { $avg: '$price'},
-            //         minPrice: { $min: '$price'},
-            //         maxPrice: { $max: '$price'},
-            //     }
-            // },
+            {
+                $group: {
+                    // `_id`: 用来设置按照什么字段分组显示；如果为null则不分组。
+                    _id: { $month: "$startDates" }, 
+                    numTourStarts: { $sum: 1 }, // 给每个文档的值为1，sum起来就成了总数。
+                }
+            },
             // {
             //     $sort: { avgPrice: 1 }
             //     // `$sort1`里面，1 表示升序，-1 表示降序。
