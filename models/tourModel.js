@@ -57,8 +57,11 @@ const tourSchema = new mongoose.Schema({
         select: false // 将该字段向客户端隐藏
     },
     // 表该旅程每次旅行的开始时间
-    startDates: [Date] // MongoDB会自动尝试解析日期格式的数据。
-
+    startDates: [Date], // MongoDB会自动尝试解析日期格式的数据。
+    secretTour: { // 这个选项为true的tour，对大众是保密的
+        type: Boolean,
+        default: false
+    }
 },{
     toJSON: {virtuals: true},
     toObject: {virtuals: true}
@@ -93,6 +96,33 @@ tourSchema.pre('save', function(next){
 // })
 // 在 Mongoose 中，文档中间件的回调函数的第一个参数通常表示当前的文档。
 // 在这里，function(doc, next) 中的 doc 参数表示已经保存到数据库的当前文档。
+
+// QUERY MIDDLEWARE
+tourSchema.pre(/^find/, function(next) {
+    // 使用正则表达式，这样所有find开头的query函数执行前都会执行这个中间件。
+    this.find({secretTour: {$ne: true}});
+    this.startTime = Date.now();
+    next();
+});
+
+tourSchema.post(/^find/, function(docs, next) {
+   // 作用于find的是query中间件，所以第一个参数docs其实是查询返回的所有文档。
+    console.log(`Query took ${Date.now() - this.startTime} miliseconds!`);
+    console.log(docs);
+    next();
+});
+
+// AGGREGATION MIDDLEWARE
+tourSchema.pre('aggregate', function(next){
+    this.pipeline().unshift({
+        $match: { secretTour: { $ne: true}}
+    });
+    // this.pipeline()返回一个数组，记录了各个stage。
+    // unshift函数：用于给数组前添加一个元素。
+    console.log('AggreHere:');
+    console.log(this.pipeline());
+    next();
+});
 
 const Tour = mongoose.model('Tour', tourSchema);
 
