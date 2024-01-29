@@ -24,10 +24,10 @@ if (process.env.NODE_ENV === 'development'){
 app.use(express.json());
 app.use(express.static(`${__dirname}/public`)); // 设置默认静态文件根目录为public
 
-app.use((req, res, next) => {
-    console.log('Hello from the middleware 😊!');
-    next();
-});
+// app.use((req, res, next) => {
+//     console.log('Hello from the middleware 😊!');
+//     next();
+// });
 
 app.use((req, res, next) => {
     req.requestTime = new Date().toISOString();
@@ -61,6 +61,32 @@ app.use('/api/v1/tours', tourRouter);
 // 加上这句之后，所有的tourRouter根路径都变成了这里指定的。
 // 后续只需要接着往后指定子路径即可，前面指定过的这部分用“/”表示。
 app.use('/api/v1/users', userRouter);
+
+// 把这个all放最后，这样才能把之前无法正常处理的route都在这里统一处理。
+app.all('*', (req, res,next)=>{
+    // res.status(404).json({
+    //     status: 'fail',
+    //     message: `Can't find ${req.originalUrl} on this server!` 
+    // });
+    
+    const err = new Error(`Can't find ${req.originalUrl} on this server`)
+    next(err);
+    // 只要在next里面传入了参数，express会假设它是一个error，
+    // 并跳过middleware stack中的所有其他middleware，
+    // 把error传入global error handling middleware。
+});
+
+// 第一个参数是err时，express会自动把它识别为错误处理函数。
+app.use((err, req, res, next) => {
+    err.statusCode = err.statusCode || 500;
+    err.status = err.status || 'error';
+
+    res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message
+    });
+
+});
 
 // 4) run the server
 
