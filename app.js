@@ -5,6 +5,7 @@
 const express = require('express');
 const morgan = require('morgan');
 
+const AppError = require('./utils/appError');
 const userRouter = require('./routes/userRoutes');
 
 const tourRouter = require('./routes/tourRoutes');
@@ -68,9 +69,7 @@ app.all('*', (req, res,next)=>{
     //     status: 'fail',
     //     message: `Can't find ${req.originalUrl} on this server!` 
     // });
-    
-    const err = new Error(`Can't find ${req.originalUrl} on this server`)
-    next(err);
+    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
     // 只要在next里面传入了参数，express会假设它是一个error，
     // 并跳过middleware stack中的所有其他middleware，
     // 把error传入global error handling middleware。
