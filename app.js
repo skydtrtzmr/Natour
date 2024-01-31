@@ -6,6 +6,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const AppError = require('./utils/appError');
+const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoutes');
 
 const tourRouter = require('./routes/tourRoutes');
@@ -64,7 +65,7 @@ app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
 // 把这个all放最后，这样才能把之前无法正常处理的route都在这里统一处理。
-app.all('*', (req, res,next)=>{
+app.all('*', (req, res, next)=>{
     // res.status(404).json({
     //     status: 'fail',
     //     message: `Can't find ${req.originalUrl} on this server!` 
@@ -76,16 +77,7 @@ app.all('*', (req, res,next)=>{
 });
 
 // 第一个参数是err时，express会自动把它识别为错误处理函数。
-app.use((err, req, res, next) => {
-    err.statusCode = err.statusCode || 500;
-    err.status = err.status || 'error';
-
-    res.status(err.statusCode).json({
-        status: err.status,
-        message: err.message
-    });
-
-});
+app.use(globalErrorHandler);
 
 // 4) run the server
 
