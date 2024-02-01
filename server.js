@@ -6,9 +6,12 @@ const app = require('./app');
 
 const DB = process.env.DATABASE_LOCAL;
 
-mongoose.connect(DB).then(() => {
-    console.log('DB connection successful!');
-});
+mongoose
+    .connect(DB)
+    .then(() => {
+        console.log('DB connection successful!');
+    })
+    .catch(err => console.log('ERROR'));
 
 
 // testTour 是一个document instance
@@ -27,7 +30,24 @@ mongoose.connect(DB).then(() => {
 
 // console.log(app.get('env'));
 // console.log(process.env);
+
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`App running on port ${port}...`);
 });
+
+process.on('unhandledRejection', err=>{
+    console.log('UNHANDLED REJECTION!💔 Shutting down...');
+    console.log(err.name, err.message);
+    server.close(() =>{
+        process.exit(1);
+    });
+});
+
+process.on('uncaughtException', err=> {
+    console.log('UNCAUGHT EXCEPTION!💔 Shutting down...');
+    console.log(err.name, err.message);
+    server.close(() =>{
+        process.exit(1);
+    });
+})
