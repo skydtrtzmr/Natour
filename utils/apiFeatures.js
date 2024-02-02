@@ -1,6 +1,20 @@
 class APIFeatures {
     // 传入两个参数，第一个是node的查询，第二个是http的查询语句。
     // queryString即req.query
+
+    // 两种检索方式：
+
+    // const tours = await Tour.find({
+    //     duraion: 5,
+    //     difficulty: 'easy'
+    // });
+
+    // const tours = await Tour.find() // return all the documents
+    //     .where('duration')
+    //     .equals(5)
+    //     .where('difficulty')
+    //     .equals('easy');
+
     constructor(query, queryString) {
         this.query = query;
         this.queryString = queryString;
