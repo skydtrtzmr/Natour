@@ -1,34 +1,10 @@
-// const fs = require('fs');
 const Tour = require('./../models/tourModel');
-const APIFeatures = require('./../utils/apiFeatures');
+// const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const factory = require('./handlerFactory');
+
 // Tour是一个schema。
-
-// const tours = JSON.parse(
-//     fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-// );
-
-// exports.checkID = (req, res, next, val) => {
-//     console.log(`Tour id is: ${val}`);
-//     if (req.params.id * 1 > tours.length){
-//         return res.status(404).json({
-//             status: "fail",
-//             message: "Invalid ID"
-//         });
-//     };
-//     next();
-// }
-
-// exports.checkBody = (req, res, next) => {
-//     if (!req.body.name || !req.body.price){
-//         return res.status(400).json({
-//             status: "fail",
-//             message: "Missing name or price"
-//         });
-//     };
-//     next();
-// }
 
 exports.aliasTopTours = (req, res, next) => {
     req.query.limit = '5';
@@ -37,123 +13,15 @@ exports.aliasTopTours = (req, res, next) => {
     next();
 }
 
+exports.getAllTours = factory.getAll(Tour);
 
+exports.getTour = factory.getOne(Tour, { path: 'reviews' });
 
-exports.getAllTours = catchAsync(async (req, res, next) => {
-    // # EXECUTE QUERY
-    const feature = new APIFeatures(Tour.find(), req.query)
-        .filter()
-        .sort()
-        .limitFields()
-        .paginate();
-    const tours = await feature.query;
-    res
-        .status(200)
-        .json({
-            status: 'success', 
-            requestTime: req.requestTime,
-            result: tours.length,
-            data:{
-                tours // `tours: tours` 可以简写一下
-            }
-        });
-})
+exports.createTour = factory.createOne(Tour);
 
-exports.updateTour = catchAsync(async (req, res, next) => {
-    const tour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        // new参数为true表示return新的document
-        runValidators: true
-    })
-    if (!tour) {
-        return next(new AppError('No tour found with that ID', 404));
-    }
-    res
-    .status(200)
-    .json({
-        status: 'success', 
-        // result: tours.length,
-        data:{
-            tour
-        }
-    });
-});
+exports.updateTour = factory.updateOne(Tour);
 
-exports.deleteTour = catchAsync(async (req, res, next)=>{
-    const tour = await Tour.findByIdAndDelete(req.params.id, {
-        new: true,
-        // new参数为true表示return新的document
-        runValidators: true
-    })
-    if (!tour) {
-        return next(new AppError('No tour found with that ID', 404));
-    }
-    res
-    .status(204)
-    .json({
-        status: 'delete success', 
-        // result: tours.length,
-        data: null,
-        message: 'Delete success!'
-    }); 
-});
-
-exports.createTour = catchAsync(async (req, res, next) => {
-    // 把post传入的参数作为创建mongo文档的数据：
-    const newTour = await Tour.create(req.body);
-    // create返回一个promise。
-    
-    res.status(201).json({
-        status: 'created! success',
-        data:{
-            tour: newTour
-        }
-    });
-})
-    // console.log(req.body);
-
-    // const newId = tours[tours.length - 1].id + 1;
-    // const newTour = Object.assign({id: newId }, req.body);
-
-    // tours.push(newTour);
-
-    // writeFile这个函数接受三个参数：path, data, callback。
-    // fs.writeFile(
-    //     `${__dirname}/dev-data/data/tours-simple.json`, 
-    //     JSON.stringify(tours), 
-    //     err => {
-    //         res.status(201).json({
-    //             status: 'created! success',
-    //             data:{
-    //                 tour: newTour
-    //             }
-    //         });
-    // });
-
-    // res.send('Oh Yes Done'); 
-    // 连着两次发送请求会导致报错：Cannot set headers after they are sent to the client
-// }
-
-exports.getTour = catchAsync(async (req, res, next) => {
-    // 当你在定义 Express 路由时，如果在路由路径中使用了冒号 :，
-    // 那么这部分就被认为是一个路由参数，并且 Express 会将这些参数存储在 req.params 对象中。
-    const tour = await Tour.findById(req.params.id);
-    // `Tour.findById(req.param.id)`等价于`Tour.findOne({_id: req.param.id})`
-
-    if (!tour) {
-        return next(new AppError('No tour found with that ID', 404));
-    }
-
-    res
-    .status(200)
-    .json({
-        status: 'success', 
-        // result: tours.length,
-        data:{
-            tour
-        }
-    });
-});
+exports.deleteTour = factory.deleteOne(Tour);
 
 exports.getTourStats = catchAsync(async (req, res, next) => {
     const stats = await Tour.aggregate([
@@ -194,7 +62,6 @@ exports.getTourStats = catchAsync(async (req, res, next) => {
         }
     });
 });
-
 
 exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
     const year = req.params.year * 1;
@@ -256,6 +123,78 @@ exports.getMonthlyPlan = catchAsync(async (req, res, next) => {
         // result: tours.length,
         data:{
             plan
+        }
+    });
+});
+
+// /tours-within/:distance/center/:latlng/unit/:unit
+// /tours-distane/223/center/-40,45/unit/mi
+exports.getToursWithin = catchAsync(async(req, res, next) => {
+    const {distance, latlng, unit} = req.params;
+    const [lat, lng] = latlng.split(',');
+
+    const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+    if(!lat || !lng) {
+        next(
+            new AppError(
+                'Please provide latitutr and longitude in the format lat,lng.',
+                400)
+        );
+    }
+    // console.log(distance, lat, lng, unit);
+    const tours = await Tour.find({ 
+        startLocation: { $geoWithin: {$centerSphere: [[lng, lat], radius]} } 
+    });
+
+    res.status(200).json({
+        status: 'success',
+        results: tours.length,
+        data: {
+            data: tours
+        }
+    });
+});
+
+exports.getDistances = catchAsync(async(req, res, next) => {
+    const { latlng, unit} = req.params;
+    const [lat, lng] = latlng.split(',');
+
+    const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+    // const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+    if(!lat || !lng) {
+        next(
+            new AppError(
+                'Please provide latitutr and longitude in the format lat,lng.',
+                400)
+        );
+    }
+
+    const distances = await Tour.aggregate([
+        {
+            $geoNear: {
+                // $geoNear always needs to be the 1st stage.
+                // 如果有多个字段都带有geospatial indexes，就需要使用keys参数来定义计算用的字段。
+                near: {
+                    type: 'Point',
+                    coordinates: [lng * 1, lat * 1]
+                },
+                distanceField: 'distance',
+                distanceMultiplier: multiplier
+            }
+        },
+        {
+            $project: {
+                distance: 1,
+                name: 1
+            }
+        }
+    ])
+    res.status(200).json({
+        status: 'success',
+        data: {
+            data: distances
         }
     });
 });

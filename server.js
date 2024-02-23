@@ -3,9 +3,10 @@ const dotenv = require('dotenv');
 
 process.on('uncaughtException', err=> {
     console.log('UNCAUGHT EXCEPTION!💔 Shutting down...');
-    console.log(err.name, err.message);
+    // 务必把err完整打印出来，而非只打印里面某几个字段。否则你都很难排除错误在哪。
+    console.log(err);
     process.exit(1);
-})
+});
 
 dotenv.config({path: './config.env'});
 const app = require('./app');
